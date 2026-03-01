@@ -1,0 +1,6 @@
+@SafnamBackend_HostAddress = http://localhost:5027
+
+GET {{SafnamBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
