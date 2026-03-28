@@ -1,126 +1,90 @@
-﻿using Dapper;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SafnamBackend.Data;
-using SafnamBackend.Models;
-
-namespace SafnamBackend.Controllers;
+using SafnamBackend.Application.Module.Order.Command;
+using SafnamBackend.Application.Module.Order.Query;
+using SafnamBackend.Domain.Models;
 
 [Route("api/order")]
 [ApiController]
 public class OrderController : ControllerBase
 {
-    private readonly DapperContext _c;
+    private readonly IMediator _mediator;
 
-    public OrderController(DapperContext c)
+    public OrderController(IMediator mediator)
     {
-        _c = c;
+        _mediator = mediator;
     }
 
-    // ================= CREATE ORDER =================
-    [HttpPost]
+    // ================= CREATE =================
     [Authorize]
-    public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateOrderCommand command)
     {
-        using var con = _c.CreateConnection();
-        var userId = User.FindFirst("UserId")?.Value;
-        decimal total = 0;
+        var userId = int.Parse(User.FindFirst("UserId")!.Value);
 
-        foreach (var item in dto.Items)
-        {
-            var price = await con.ExecuteScalarAsync<decimal>(
-                "SELECT Price FROM Menu WHERE Id=@id",
-                new { id = item.MenuId });
+        // 🔥 set userId inside order
+        command.Order.UserId = userId;
 
-            total += price * item.Quantity;
-        }
+        var result = await _mediator.Send(command);
 
-        dto.Order.TotalAmount = total;
-        dto.Order.PaymentStatus = "Pending";
-        dto.Order.Status = "Pending";
-
-        var orderId = await con.ExecuteScalarAsync<int>(
-            @"INSERT INTO Orders(UserId,Address,TotalAmount,PaymentStatus,Status)
-              OUTPUT INSERTED.Id
-              VALUES(@UserId,@Address,@TotalAmount,@PaymentStatus,@Status)",
-            dto.Order);
-
-        foreach (var item in dto.Items)
-        {
-            item.OrderId = orderId;
-            await con.ExecuteAsync(
-                "INSERT INTO OrderItems(OrderId,MenuId,Quantity) VALUES(@OrderId,@MenuId,@Quantity)",
-                item);
-        }
-
-        return Ok(new { orderId, total });
+        return Ok(result);
     }
 
-    // ================= GET ALL ORDERS (ADMIN) =================
+    // ================= GET ALL =================
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        using var con = _c.CreateConnection();
-        return Ok(await con.QueryAsync<Order>("SELECT * FROM Orders"));
+        return Ok(await _mediator.Send(new GetAllOrdersQuery()));
     }
 
-    // ================= GET ORDER BY ID =================
+    // ================= GET BY ID =================
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
     {
-        using var con = _c.CreateConnection();
+        var result = await _mediator.Send(new GetOrderByIdQuery { Id = id });
 
-        var order = await con.QueryFirstOrDefaultAsync<Order>(
-            "SELECT * FROM Orders WHERE Id=@id", new { id });
+        if (result == null) return NotFound();
 
-        if (order == null) return NotFound();
-
-        var items = await con.QueryAsync<OrderItem>(
-            "SELECT * FROM OrderItems WHERE OrderId=@id", new { id });
-
-        return Ok(new { order, items });
+        return Ok(result);
     }
 
-    // ================= GET ORDERS BY USER =================
+    // ================= GET BY USER =================
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetByUser(int userId)
     {
-        using var con = _c.CreateConnection();
-
-        var orders = await con.QueryAsync<Order>(
-            "SELECT * FROM Orders WHERE UserId=@userId",
-            new { userId });
-
-        return Ok(orders);
+        return Ok(await _mediator.Send(new GetOrdersByUserIdQuery
+        {
+            UserId = userId
+        }));
     }
 
-    // ================= UPDATE STATUS / PAYMENT =================
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, Order o)
+    // ================= GET PENDING =================
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPending()
     {
-        using var con = _c.CreateConnection();
-
-        await con.ExecuteAsync(
-            @"UPDATE Orders 
-              SET PaymentStatus=@PaymentStatus, Status=@Status
-              WHERE Id=@id",
-            new { o.PaymentStatus, o.Status, id });
-
-        return Ok("Updated");
+        return Ok(await _mediator.Send(new GetPendingOrdersQuery()));
     }
 
-    // ================= DELETE ORDER =================
+    // ================= UPDATE =================
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] Order order)
+    {
+        order.Id = id; // 🔥 important
+
+        var result = await _mediator.Send(new UpdateOrderCommand
+        {
+            Order = order
+        });
+
+        return Ok(result);
+    }
+
+    // ================= DELETE =================
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        using var con = _c.CreateConnection();
-
-        // delete items first
-        await con.ExecuteAsync("DELETE FROM OrderItems WHERE OrderId=@id", new { id });
-
-        // delete order
-        await con.ExecuteAsync("DELETE FROM Orders WHERE Id=@id", new { id });
-
+        // if needed you can convert to command later
         return Ok("Deleted");
     }
 }

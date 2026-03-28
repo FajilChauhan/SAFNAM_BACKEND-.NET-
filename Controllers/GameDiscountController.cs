@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SafnamBackend.Data;
-using SafnamBackend.Models;
+using SafnamBackend.Domain.Models;
 
 namespace SafnamBackend.Controllers
 {

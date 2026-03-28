@@ -1,115 +1,61 @@
-﻿using Dapper;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using SafnamBackend.Data;
-using SafnamBackend.Models;
+using SafnamBackend.Application.DTO;
+using SafnamBackend.Application.Module.Room.Command;
 
 [Route("api/room")]
 [ApiController]
 public class RoomController : ControllerBase
 {
-    private readonly DapperContext _c;
-    private readonly IWebHostEnvironment _env;
+    private readonly IMediator _mediator;
 
-    public RoomController(DapperContext c, IWebHostEnvironment env)
+    public RoomController(IMediator mediator)
     {
-        _c = c;
-        _env = env;
+        _mediator = mediator;
     }
 
-    // ✅ GET ROOMS
     [HttpGet]
-    public async Task<IActionResult> GetRooms()
+    public async Task<IActionResult> Get()
     {
-        using var con = _c.CreateConnection();
-        return Ok(await con.QueryAsync<Room>("SELECT * FROM Rooms"));
+        return Ok(await _mediator.Send(new GetRoomsQuery()));
     }
 
-    // ✅ ADD ROOM WITH IMAGE
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var result = await _mediator.Send(new GetRoomByIdQuery { Id = id });
+
+        if (result == null) return NotFound();
+
+        return Ok(result);
+    }
+
     [HttpPost]
-    public async Task<IActionResult> Add([FromForm] int RoomNo,
-                                            [FromForm] string Type,
-                                            [FromForm] decimal PricePerDay, 
-                                            IFormFile image)
+    public async Task<IActionResult> Create([FromForm] RoomDto dto)
     {
-        if (image == null)
-            return BadRequest("Image required");
-
-        var folder = Path.Combine(_env.WebRootPath, "images");
-        if (!Directory.Exists(folder))
-            Directory.CreateDirectory(folder);
-
-        var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
-        var path = Path.Combine(folder, fileName);
-
-        using var stream = new FileStream(path, FileMode.Create);
-        await image.CopyToAsync(stream);
-
-        var imagePath = "/images/" + fileName;
-
-        using var con = _c.CreateConnection();
-        await con.ExecuteAsync(
-            @"INSERT INTO Rooms(RoomNo, Type, ImagePath, PricePerDay)
-              VALUES(@RoomNo, @Type, @ImagePath, @PricePerDay)",
-            new
-            {
-                RoomNo,
-                Type,
-                ImagePath = imagePath,
-                PricePerDay
-            });
-
-        return Ok("Room added");
+        return Ok(await _mediator.Send(new CreateRoomCommand { Dto = dto }));
     }
 
-    // ✅ UPDATE ROOM (OPTIONAL IMAGE)
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id,  IFormFile? image, 
-                                            [FromForm] int RoomNo,
-                                            [FromForm] string Type,
-                                            [FromForm] decimal PricePerDay)
+    public async Task<IActionResult> Update(int id, [FromForm] RoomDto dto)
     {
-        string imagePath = null;
-
-        if (image != null)
-        {
-            var folder = Path.Combine(_env.WebRootPath, "images");
-            var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
-            var path = Path.Combine(folder, fileName);
-
-            using var stream = new FileStream(path, FileMode.Create);
-            await image.CopyToAsync(stream);
-
-            imagePath = "/images/" + fileName;
-        }
-
-        using var con = _c.CreateConnection();
-
-        if (imagePath == null)
-        {
-            await con.ExecuteAsync(
-                @"UPDATE Rooms 
-                  SET RoomNo=@RoomNo, Type=@Type, PricePerDay=@PricePerDay 
-                  WHERE Id=@id",
-                new { RoomNo, Type, PricePerDay, id });
-        }
-        else
-        {
-            await con.ExecuteAsync(
-                @"UPDATE Rooms 
-                  SET RoomNo=@RoomNo, Type=@Type, PricePerDay=@PricePerDay, ImagePath=@ImagePath 
-                  WHERE Id=@id",
-                new { RoomNo, Type, PricePerDay, ImagePath = imagePath, id });
-        }
-
-        return Ok("Room updated");
+        dto.Id = id;
+        return Ok(await _mediator.Send(new UpdateRoomCommand { Dto = dto }));
     }
 
-    // ✅ DELETE ROOM
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        using var con = _c.CreateConnection();
-        await con.ExecuteAsync("DELETE FROM Rooms WHERE Id=@id", new { id });
-        return Ok("Deleted");
+        return Ok(await _mediator.Send(new DeleteRoomCommand { Id = id }));
+    }
+
+    // 🔥 NEW (reference check API)
+    [HttpGet("{id}/booking-count")]
+    public async Task<IActionResult> GetBookingCount(int id)
+    {
+        return Ok(await _mediator.Send(new GetRoomBookingCountQuery
+        {
+            RoomId = id
+        }));
     }
 }

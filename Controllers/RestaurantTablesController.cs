@@ -1,83 +1,67 @@
-﻿using Dapper;
-using Microsoft.AspNetCore.Http;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using SafnamBackend.Data;
-using SafnamBackend.Models;
+using SafnamBackend.Application.Module.RestaurantTable.Command;
+using SafnamBackend.Application.Module.RestaurantTable.Query;
+using SafnamBackend.Domain.Models;
 
-namespace SafnamBackend.Controllers
+[Route("api/[controller]")]
+[ApiController]
+public class RestaurantTablesController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class RestaurantTablesController : ControllerBase
+    private readonly IMediator _mediator;
+
+    public RestaurantTablesController(IMediator mediator)
     {
-        private readonly DapperContext _context;
+        _mediator = mediator;
+    }
 
-        public RestaurantTablesController(DapperContext context)
+    // GET ALL
+    [HttpGet]
+    public async Task<IActionResult> Get()
+    {
+        return Ok(await _mediator.Send(new GetAllTablesQuery()));
+    }
+
+    // GET BY ID
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(int id)
+    {
+        var result = await _mediator.Send(new GetTableByIdQuery { Id = id });
+
+        if (result == null) return NotFound();
+
+        return Ok(result);
+    }
+
+    // CREATE
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] RestaurantTable table)
+    {
+        return Ok(await _mediator.Send(new CreateTableCommand
         {
-            _context = context;
-        }
+            Table = table
+        }));
+    }
 
-        // GET ALL TABLES
-        [HttpGet]
-        public async Task<IActionResult> GetTables()
+    // UPDATE
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] RestaurantTable table)
+    {
+        table.Id = id;
+
+        return Ok(await _mediator.Send(new UpdateTableCommand
         {
-            using var con = _context.CreateConnection();
-            var data = await con.QueryAsync<RestaurantTable>("SELECT * FROM RestaurantTables");
-            return Ok(data);
-        }
+            Table = table
+        }));
+    }
 
-        // GET SINGLE TABLE
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetTable(int id)
+    // DELETE
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        return Ok(await _mediator.Send(new DeleteTableCommand
         {
-            using var con = _context.CreateConnection();
-            var table = await con.QueryFirstOrDefaultAsync<RestaurantTable>(
-                "SELECT * FROM RestaurantTables WHERE Id=@id", new { id });
-
-            if (table == null) return NotFound();
-
-            return Ok(table);
-        }
-
-        // ADD TABLE (Admin)
-        [HttpPost]
-        public async Task<IActionResult> AddTable(RestaurantTable t)
-        {
-            using var con = _context.CreateConnection();
-
-            await con.ExecuteAsync(
-                "INSERT INTO RestaurantTables(TableNo,Floor,ExtraCharge) VALUES(@TableNo,@Floor,@ExtraCharge)",
-                t);
-
-            return Ok("Table Added");
-        }
-
-        // UPDATE TABLE
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTable(int id, RestaurantTable t)
-        {
-            using var con = _context.CreateConnection();
-
-            await con.ExecuteAsync(
-                @"UPDATE RestaurantTables 
-              SET TableNo=@TableNo,Floor=@Floor,ExtraCharge=@ExtraCharge
-              WHERE Id=@id",
-                new { t.TableNo, t.Floor, t.ExtraCharge, id });
-
-            return Ok("Updated");
-        }
-
-        // DELETE TABLE
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTable(int id)
-        {
-            using var con = _context.CreateConnection();
-
-            await con.ExecuteAsync(
-                "DELETE FROM RestaurantTables WHERE Id=@id",
-                new { id });
-
-            return Ok("Deleted");
-        }
+            Id = id
+        }));
     }
 }

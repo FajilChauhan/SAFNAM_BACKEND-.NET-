@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Crypto.Generators;
+using SafnamBackend.Application.DTO;
 using SafnamBackend.DTO;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

@@ -1,128 +1,75 @@
-﻿using Dapper;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using SafnamBackend.Data;
-using SafnamBackend.Models;
+using SafnamBackend.DTO;
 
-namespace SafnamBackend.Controllers
+[Route("api/roombooking")]
+[ApiController]
+public class RoomBookingController : ControllerBase
 {
-    [Route("api/roombooking")]
-    [ApiController]
-    public class RoomBookingController : ControllerBase
+    private readonly IMediator _mediator;
+
+    public RoomBookingController(IMediator mediator)
     {
-        private readonly DapperContext _c;
+        _mediator = mediator;
+    }
 
-        public RoomBookingController(DapperContext c)
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        return Ok(await _mediator.Send(new GetAllRoomBookingsQuery()));
+    }
+
+    [HttpGet("room/{roomId}")]
+    public async Task<IActionResult> GetByRoom(int roomId)
+    {
+        return Ok(await _mediator.Send(new GetRoomBookingsByRoomQuery
         {
-            _c = c;
-        }
+            RoomId = roomId
+        }));
+    }
 
-        // ✅ GET ALL BOOKINGS
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActive()
+    {
+        return Ok(await _mediator.Send(new GetActiveRoomBookingsQuery()));
+    }
+
+    // 🔥 USER HISTORY
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetByUser(int userId)
+    {
+        return Ok(await _mediator.Send(new GetRoomBookingsByUserQuery
         {
-            using var con = _c.CreateConnection();
-            var data = await con.QueryAsync<RoomBooking>("SELECT * FROM RoomBookings");
-            return Ok(data);
-        }
+            UserId = userId
+        }));
+    }
 
-        // ✅ GET BOOKINGS BY ROOM (for conflict check)
-        [HttpGet("room/{roomId}")]
-        public async Task<IActionResult> GetBookingsByRoom(int roomId)
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] RoomBookingDto dto)
+    {
+        return Ok(await _mediator.Send(new CreateRoomBookingCommand
         {
-            using var con = _c.CreateConnection();
+            Dto = dto
+        }));
+    }
 
-            var bookings = await con.QueryAsync<RoomBooking>(
-                "SELECT * FROM RoomBookings WHERE RoomId = @roomId",
-                new { roomId });
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] RoomBookingDto dto)
+    {
+        dto.Id = id;
 
-            return Ok(bookings); // returns [] if none
-        }
-
-        // ✅ CREATE BOOKING
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] RoomBooking b)
+        return Ok(await _mediator.Send(new UpdateRoomBookingCommand
         {
-            using var con = _c.CreateConnection();
+            Dto = dto
+        }));
+    }
 
-            // 🔹 Validate dates
-            if (b.CheckOut <= b.CheckIn)
-                return BadRequest("Check-out must be after check-in");
-
-            // 🔹 calculate nights
-            var nights = (b.CheckOut - b.CheckIn).Days;
-
-            // 🔹 get price
-            var price = await con.QueryFirstOrDefaultAsync<decimal>(
-                "SELECT PricePerDay FROM Rooms WHERE Id=@id",
-                new { id = b.RoomId });
-
-            if (price == 0)
-                return BadRequest("Invalid room");
-
-            var totalAmount = nights * price;
-
-            await con.ExecuteAsync(
-            @"INSERT INTO RoomBookings
-            (RoomId, UserId, CheckIn, CheckOut, Status, PaymentStatus, TotalAmount)
-            VALUES
-            (@RoomId, @UserId, @CheckIn, @CheckOut, 1, 'Pending', @TotalAmount)",
-            new
-            {
-                b.RoomId,
-                b.UserId,
-                b.CheckIn,
-                b.CheckOut,
-                TotalAmount = totalAmount
-            });
-
-            return Ok(new
-            {
-                message = "Room booked successfully",
-                totalAmount
-            });
-        }
-
-        // ✅ UPDATE BOOKING
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, RoomBooking b)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        return Ok(await _mediator.Send(new DeleteRoomBookingCommand
         {
-            using var con = _c.CreateConnection();
-
-            await con.ExecuteAsync(
-            @"UPDATE RoomBookings
-              SET RoomId=@RoomId,
-                  UserId=@UserId,
-                  CheckIn=@CheckIn,
-                  CheckOut=@CheckOut,
-                  Status=@Status,
-                  PaymentStatus=@PaymentStatus,
-                  TotalAmount=@TotalAmount
-              WHERE Id=@id",
-            new
-            {
-                b.RoomId,
-                b.UserId,
-                b.CheckIn,
-                b.CheckOut,
-                b.Status,
-                b.PaymentStatus,
-                b.TotalAmount,
-                id
-            });
-
-            return Ok("Updated");
-        }
-
-        // ✅ DELETE BOOKING
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            using var con = _c.CreateConnection();
-            await con.ExecuteAsync(
-                "DELETE FROM RoomBookings WHERE Id=@id",
-                new { id });
-
-            return Ok("Deleted");
-        }
+            Id = id
+        }));
     }
 }

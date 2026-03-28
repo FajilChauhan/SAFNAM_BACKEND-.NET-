@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.23" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
@@ -17,6 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Application\Module\GameDiscount\Command\" />
+    <Folder Include="Application\Module\GameDiscount\Handler\" />
+    <Folder Include="Application\Module\GameDiscount\Query\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 

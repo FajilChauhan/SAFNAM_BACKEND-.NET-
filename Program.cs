@@ -1,18 +1,40 @@
-using SafnamBackend.Data;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using SafnamBackend.Application.Module.Order.Command; // for MediatR assembly
+using SafnamBackend.Data;
+using SafnamBackend.Domain.Interface;
+using SafnamBackend.Infrastructure.Repository;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ================= SERVICES =================
 
+// Controllers
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Dapper
 builder.Services.AddSingleton<DapperContext>();
 
+// ?? MediatR (IMPORTANT FIX)
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(CreateOrderCommand).Assembly));
+
+// ?? Repositories (IMPORTANT FIX)
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<ITableBookingRepository, TableBookingRepository>();
+builder.Services.AddScoped<IRoomBookingRepository, RoomBookingRepository>();
+builder.Services.AddScoped<IRestaurantTableRepository, RestaurantTableRepository>();
+builder.Services.AddScoped<IMenuRepository, MenuRepository>();
+
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact",
@@ -25,6 +47,7 @@ builder.Services.AddCors(options =>
         });
 });
 
+// JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
 
@@ -48,24 +71,27 @@ builder.Services.AddAuthentication(options =>
 });
 
 
+// ================= APP =================
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// ?? IMPORTANT ORDER FIX
+app.UseCors("AllowReact");
+
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseStaticFiles();
-
 app.MapControllers();
-
-app.UseCors("AllowReact");
 
 app.Run();

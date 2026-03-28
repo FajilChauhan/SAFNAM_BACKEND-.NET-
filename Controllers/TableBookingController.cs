@@ -1,72 +1,47 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SafnamBackend.Data;
-using Dapper;
-using SafnamBackend.Models;
-
-namespace SafnamBackend.Controllers;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using SafnamBackend.DTO;
 
 [Route("api/tablebooking")]
 [ApiController]
 public class TableBookingController : ControllerBase
 {
-    private readonly DapperContext _c;
-    public TableBookingController(DapperContext c) { _c = c; }
+    private readonly IMediator _mediator;
 
-    // GET ALL BOOKINGS
+    public TableBookingController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
-    {
-        using var con = _c.CreateConnection();
-        return Ok(await con.QueryAsync<TableBooking>("SELECT * FROM TableBookings"));
-    }
+        => Ok(await _mediator.Send(new GetAllTableBookingsQuery()));
 
-    // GET BY ID
-    [HttpGet("{id}")]
-    public async Task<IActionResult> Get(int id)
-    {
-        using var con = _c.CreateConnection();
-        var b = await con.QueryFirstOrDefaultAsync<TableBooking>(
-            "SELECT * FROM TableBookings WHERE Id=@id", new { id });
+    // 🔥 ACTIVE ONLY (GRID)
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActive()
+        => Ok(await _mediator.Send(new GetActiveTableBookingsQuery()));
 
-        if (b == null) return NotFound();
-        return Ok(b);
-    }
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetByUser(int userId)
+        => Ok(await _mediator.Send(new GetTableBookingsByUserQuery { UserId = userId }));
 
-    // CREATE
+    [HttpGet("table/{tableId}")]
+    public async Task<IActionResult> GetByTable(int tableId)
+        => Ok(await _mediator.Send(new GetTableBookingsByTableQuery { TableId = tableId }));
+
     [HttpPost]
-    public async Task<IActionResult> Create(TableBooking b)
-    {
-        using var con = _c.CreateConnection();
+    public async Task<IActionResult> Create([FromBody] TableBookingDTO dto)
+        => Ok(await _mediator.Send(new CreateTableBookingCommand { Dto = dto }));
 
-        await con.ExecuteAsync(
-            "INSERT INTO TableBookings(TableId,UserId,BookingDate,TimeSlot,Status) VALUES(@TableId,@UserId,@BookingDate,@TimeSlot,1)",
-            b);
-
-        return Ok("Booked");
-    }
-
-    // UPDATE
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, TableBooking b)
+    public async Task<IActionResult> Update(int id, [FromBody] TableBookingDTO dto)
     {
-        using var con = _c.CreateConnection();
-
-        await con.ExecuteAsync(
-            @"UPDATE TableBookings 
-              SET TableId=@TableId,UserId=@UserId,BookingDate=@BookingDate,
-                  TimeSlot=@TimeSlot,Status=@Status
-              WHERE Id=@id",
-            new { b.TableId, b.UserId, b.BookingDate, b.TimeSlot, b.Status, id });
-
-        return Ok("Updated");
+        dto.Id = id;
+        return Ok(await _mediator.Send(new UpdateTableBookingCommand { Dto = dto }));
     }
 
-    // DELETE
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
-    {
-        using var con = _c.CreateConnection();
-        await con.ExecuteAsync("DELETE FROM TableBookings WHERE Id=@id", new { id });
-        return Ok("Deleted");
-    }
+        => Ok(await _mediator.Send(new DeleteTableBookingCommand { Id = id }));
 }
