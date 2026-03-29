@@ -23,6 +23,13 @@ namespace SafnamBackend.Application.Module.Room.Handler
             string? imagePath = null;
             bool hasImage = false;
 
+            var allRooms = await _repo.GetAllAsync();
+
+            if (allRooms.Any(m => m.RoomNo == dto.RoomNo))
+            {
+                throw new Exception("Room No already exists");
+            }
+
             if (dto.Image != null)
             {
                 var folder = Path.Combine(_env.WebRootPath, "images");

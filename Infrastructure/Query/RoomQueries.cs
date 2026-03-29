@@ -4,8 +4,12 @@
     {
         public const string GetAll = "SELECT * FROM Rooms";
 
-        public const string Insert = @"INSERT INTO Rooms(RoomNo,Type,ImagePath,PricePerDay)
-                                      VALUES(@RoomNo,@Type,@ImagePath,@PricePerDay)";
+        public const string Insert = @"INSERT INTO Rooms(RoomNo,Type,ImagePath,PricePerDay, IsActive)
+                                      VALUES(@RoomNo,@Type,@ImagePath,@PricePerDay, 1)";
+
+        public const string GetAllActive = "SELECT * FROM Rooms WHERE IsActive = 1";
+
+        public const string UpdateStatus = @"UPDATE Rooms SET IsActive = @IsActive WHERE Id = @Id";
 
         public const string UpdateWithoutImage = @"UPDATE Rooms 
             SET RoomNo=@RoomNo, Type=@Type, PricePerDay=@PricePerDay 

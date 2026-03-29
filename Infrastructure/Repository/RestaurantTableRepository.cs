@@ -27,6 +27,11 @@ namespace SafnamBackend.Infrastructure.Repository
             return await con.QueryFirstOrDefaultAsync<RestaurantTable>(
                 RestaurantTableQueries.GetById, new { Id = id });
         }
+        public async Task<IEnumerable<RestaurantTable>> GetAllActiveAsync()
+        {
+            using var con = _context.CreateConnection();
+            return await con.QueryAsync<RestaurantTable>(RestaurantTableQueries.GetAllActive);
+        }
 
         public async Task<int> CreateAsync(RestaurantTable table)
         {
@@ -34,6 +39,11 @@ namespace SafnamBackend.Infrastructure.Repository
             return await con.ExecuteAsync(RestaurantTableQueries.Insert, table);
         }
 
+        public async Task UpdateStatusAsync(int id, bool isActive)
+        {
+            using var con = _context.CreateConnection();
+            await con.ExecuteAsync(RestaurantTableQueries.UpdateStatus, new { Id = id, IsActive = isActive });
+        }
         public async Task<int> UpdateAsync(RestaurantTable table)
         {
             using var con = _context.CreateConnection();

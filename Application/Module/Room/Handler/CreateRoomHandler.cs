@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using SafnamBackend.Application.Module.Room.Command;
 using SafnamBackend.Domain.Interface;
+using SafnamBackend.Domain.Models;
 using RoomModel = SafnamBackend.Domain.Models.Room;
 
 namespace SafnamBackend.Application.Module.Room.Handler
@@ -22,6 +23,14 @@ namespace SafnamBackend.Application.Module.Room.Handler
 
             if (dto.Image == null)
                 throw new Exception("Image required");
+
+            // 🔥 DUPLICATE CHECK (IMPORTANT)
+            var allRooms = await _repo.GetAllAsync();
+
+            if (allRooms.Any(m => m.RoomNo == dto.RoomNo))
+            {
+                throw new Exception("Room No already exists");
+            }
 
             var folder = Path.Combine(_env.WebRootPath, "images");
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);

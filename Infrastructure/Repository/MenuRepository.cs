@@ -28,12 +28,23 @@ namespace SafnamBackend.Infrastructure.Repository
                 new { Id = id });
         }
 
+        public async Task<IEnumerable<Menu>> GetAllActiveAsync()
+        {
+            using var con = _context.CreateConnection();
+            return await con.QueryAsync<Menu>(MenuQueries.GetAllActive);
+        }
+
         public async Task<int> CreateAsync(Menu menu)
         {
             using var con = _context.CreateConnection();
             return await con.ExecuteAsync(MenuQueries.Insert, menu);
         }
 
+        public async Task UpdateStatusAsync(int id, bool isActive)
+        {
+            using var con = _context.CreateConnection();
+            await con.ExecuteAsync(MenuQueries.UpdateStatus, new { Id = id, IsActive = isActive });
+        }
         public async Task<int> UpdateAsync(Menu menu, bool hasImage)
         {
             using var con = _context.CreateConnection();

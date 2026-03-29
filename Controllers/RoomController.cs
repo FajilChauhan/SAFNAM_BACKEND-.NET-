@@ -21,6 +21,12 @@ public class RoomController : ControllerBase
         return Ok(await _mediator.Send(new GetRoomsQuery()));
     }
 
+    [HttpGet("Active")]
+    public async Task<IActionResult> GetActive()
+    {
+        return Ok(await _mediator.Send(new GetActiveRoomsQuery()));
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -34,14 +40,47 @@ public class RoomController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromForm] RoomDto dto)
     {
-        return Ok(await _mediator.Send(new CreateRoomCommand { Dto = dto }));
+        try
+        {
+            return Ok(await _mediator.Send(new CreateRoomCommand { Dto = dto }));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); // ✅ clean error
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromForm] RoomDto dto)
     {
         dto.Id = id;
-        return Ok(await _mediator.Send(new UpdateRoomCommand { Dto = dto }));
+        try
+        {
+            return Ok(await _mediator.Send(new UpdateRoomCommand { Dto = dto }));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); // ✅ clean error
+        }
+    }
+
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateStatus(int id, bool isActive)
+    {
+        try
+        {
+            var result = await _mediator.Send(new UpdateRoomStatusCommand
+            {
+                Id = id,
+                IsActive = isActive
+            });
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); // ✅ clean error
+        }
     }
 
     [HttpDelete("{id}")]

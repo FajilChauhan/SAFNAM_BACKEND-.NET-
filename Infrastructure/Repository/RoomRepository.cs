@@ -28,11 +28,22 @@ namespace SafnamBackend.Infrastructure.Repository
                 "SELECT * FROM Rooms WHERE Id=@Id",
                 new { Id = id });
         }
+        public async Task<IEnumerable<Room>> GetAllActiveAsync()
+        {
+            using var con = _c.CreateConnection();
+            return await con.QueryAsync<Room>(RoomQueries.GetAllActive);
+        }
 
         public async Task<int> CreateAsync(Room room)
         {
             using var con = _c.CreateConnection();
             return await con.ExecuteAsync(RoomQueries.Insert, room);
+        }
+
+        public async Task UpdateStatusAsync(int id, bool isActive)
+        {
+            using var con = _c.CreateConnection();
+            await con.ExecuteAsync(RoomQueries.UpdateStatus, new { Id = id, IsActive = isActive });
         }
 
         public async Task<int> UpdateAsync(Room room, bool hasImage)

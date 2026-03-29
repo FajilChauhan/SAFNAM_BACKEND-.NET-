@@ -15,6 +15,13 @@ namespace SafnamBackend.Application.Module.RestaurantTables.Handler
 
         public async Task<string> Handle(CreateTableCommand request, CancellationToken cancellationToken)
         {
+            // 🔥 DUPLICATE CHECK (IMPORTANT)
+            var allTables = await _repo.GetAllAsync();
+
+            if (allTables.Any(m => (m.Floor == request.Table.Floor && m.TableNo == request.Table.TableNo)))
+            {
+                throw new Exception("Table No already exists");
+            }
             await _repo.CreateAsync(request.Table);
             return "Table Created";
         }

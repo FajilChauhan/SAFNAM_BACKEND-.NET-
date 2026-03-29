@@ -11,3 +11,5 @@ public class GetRoomBookingCountQuery : IRequest<int>
 {
     public int RoomId { get; set; }
 }
+
+public class GetActiveRoomsQuery : IRequest<IEnumerable<Room>> { }

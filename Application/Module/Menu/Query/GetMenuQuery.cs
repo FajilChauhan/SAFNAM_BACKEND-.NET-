@@ -11,4 +11,6 @@ namespace SafnamBackend.Application.Module.Menu.Query
     {
         public int Id { get; set; }
     }
+
+    public class GetActiveMenuQuery : IRequest<IEnumerable<MenuModel>> { }
 }

@@ -10,5 +10,6 @@ namespace SafnamBackend.Domain.Models
         public string Type { get; set; }
         public decimal PricePerDay { get; set; }
         public string? ImagePath { get; set; }
+        public bool IsActive { get; set; }
     }
 }

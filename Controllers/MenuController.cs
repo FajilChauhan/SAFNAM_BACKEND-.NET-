@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SafnamBackend.Application.Module.Menu.Command;
 using SafnamBackend.Application.Module.Menu.Query;
+using SafnamBackend.Application.Module.Room.Command;
 using SafnamBackend.Domain.Models;
 
 [Route("api/[controller]")]
@@ -23,6 +24,12 @@ public class MenuController : ControllerBase
         return Ok(await _mediator.Send(new GetMenuQuery()));
     }
 
+    [HttpGet("Active")]
+    public async Task<IActionResult> GetActive()
+    {
+        return Ok(await _mediator.Send(new GetActiveMenuQuery()));
+    }
+
     // ✅ GET BY ID
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
@@ -38,27 +45,59 @@ public class MenuController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromForm] Menu menu, IFormFile image)
     {
-        var result = await _mediator.Send(new CreateMenuCommand
+        try
         {
-            Menu = menu,
-            Image = image
-        });
+            var result = await _mediator.Send(new CreateMenuCommand
+            {
+                Menu = menu,
+                Image = image
+            });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); // ✅ clean error
+        }
+    }
+
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateStatus(int id, bool isActive)
+    {
+        try
+        {
+            var result = await _mediator.Send(new UpdateMenuStatusCommand
+            {
+                Id = id,
+                IsActive = isActive
+            });
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); // ✅ clean error
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromForm] Menu menu, IFormFile? image)
     {
         menu.Id = id;
-
-        var result = await _mediator.Send(new UpdateMenuCommand
+        try
         {
-            Menu = menu,
-            Image = image
-        });
+            var result = await _mediator.Send(new UpdateMenuCommand
+            {
+                Menu = menu,
+                Image = image
+            });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); // ✅ clean error
+        }
     }
 
     [HttpDelete("{id}")]

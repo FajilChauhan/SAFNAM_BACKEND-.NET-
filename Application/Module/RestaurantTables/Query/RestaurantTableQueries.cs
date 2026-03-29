@@ -9,4 +9,5 @@ namespace SafnamBackend.Application.Module.RestaurantTable.Query
     {
         public int Id { get; set; }
     }
+    public class GetActiveTablesQuery : IRequest<IEnumerable<TableModel>> { }
 }

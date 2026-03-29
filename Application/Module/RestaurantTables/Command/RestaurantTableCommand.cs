@@ -8,6 +8,12 @@ namespace SafnamBackend.Application.Module.RestaurantTable.Command
         public TableModel Table { get; set; }
     }
 
+    public class UpdateTableStatusCommand : IRequest<string>
+    {
+        public int Id { get; set; }
+        public bool IsActive { get; set; }
+    }
+
     public class UpdateTableCommand : IRequest<string>
     {
         public TableModel Table { get; set; }

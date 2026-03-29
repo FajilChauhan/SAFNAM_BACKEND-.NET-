@@ -24,6 +24,14 @@ namespace SafnamBackend.Application.Module.Menu.Handler
             if (string.IsNullOrEmpty(menu.ItemName) || image == null || string.IsNullOrEmpty(menu.Type))
                 throw new Exception("All fields are required");
 
+            // 🔥 DUPLICATE CHECK (IMPORTANT)
+            var allMenus = await _repo.GetAllAsync();
+
+            if (allMenus.Any(m => m.ItemName.ToLower().Trim() == menu.ItemName.ToLower().Trim()))
+            {
+                throw new Exception("Menu item already exists");
+            }
+
             var folder = Path.Combine(_env.WebRootPath, "images");
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 

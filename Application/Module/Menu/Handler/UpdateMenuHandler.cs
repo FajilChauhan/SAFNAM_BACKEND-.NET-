@@ -22,6 +22,13 @@ namespace SafnamBackend.Application.Module.Menu.Handler
             if (menu.Id <= 0)
                 throw new Exception("Invalid Menu Id");
 
+            // 🔥 DUPLICATE CHECK (IMPORTANT)
+            var allMenus = await _repo.GetAllAsync();
+
+            if (allMenus.Any(m => m.ItemName.ToLower().Trim() == menu.ItemName.ToLower().Trim()))
+            {
+                throw new Exception("Menu item already exists");
+            }
             bool hasImage = false;
 
             if (image != null)

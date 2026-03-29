@@ -8,6 +8,11 @@ namespace SafnamBackend.Application.Module.Room.Command
         public RoomDto Dto { get; set; }
     }
 
+    public class UpdateRoomStatusCommand : IRequest<string>
+    {
+        public int Id { get; set; }
+        public bool IsActive { get; set; }
+    }
     public class UpdateRoomCommand : IRequest<string>
     {
         public RoomDto Dto { get; set; }

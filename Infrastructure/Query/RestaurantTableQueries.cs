@@ -6,8 +6,13 @@
 
         public const string GetById = "SELECT * FROM RestaurantTables WHERE Id=@Id";
 
-        public const string Insert = @"INSERT INTO RestaurantTables(TableNo,Floor,ExtraCharge)
-                                      VALUES(@TableNo,@Floor,@ExtraCharge)";
+        public const string GetAllActive = "SELECT * FROM RestaurantTables WHERE IsActive = 1";
+
+        public const string Insert = @"INSERT INTO RestaurantTables(TableNo,Floor,ExtraCharge, IsActive)
+                                      VALUES(@TableNo,@Floor,@ExtraCharge, 1)";
+
+
+        public const string UpdateStatus = @"UPDATE RestaurantTables SET IsActive = @IsActive WHERE Id = @Id";
 
         public const string Update = @"UPDATE RestaurantTables 
                                       SET TableNo=@TableNo,
