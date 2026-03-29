@@ -4,7 +4,9 @@
     {
         public const string GetAll = @"SELECT 
                                         Rb.Id,
+                                        Rb.RoomId,
                                         R.RoomNo,
+                                        Rb.UserId,
                                         U.Username,
                                         Rb.CheckIn,
                                         Rb.CheckOut,
@@ -19,7 +21,9 @@
 
         public const string GetByUser = @"SELECT 
                                         Rb.Id,
+                                        Rb.RoomId,
                                         R.RoomNo,
+                                        Rb.UserId,
                                         U.Username,
                                         Rb.CheckIn,
                                         Rb.CheckOut,
@@ -33,7 +37,9 @@
 
         public const string GetActive = @"SELECT 
                                     Rb.Id,
+                                    Rb.RoomId,
                                     R.RoomNo,
+                                    Rb.UserId,
                                     U.Username,
                                     Rb.CheckIn,
                                     Rb.CheckOut,

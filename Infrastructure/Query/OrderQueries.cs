@@ -2,12 +2,12 @@
 {
     public static class OrderQueries
     {
-        public const string GetAll = "SELECT * FROM Orders";
+        public const string GetAll = "SELECT O.Id, O.UserId, U.UserName, O.Address, O.TotalAmount, O.PaymentStatus, O.Status FROM Orders as O Left Join Users as U on U.Id = O.UserId";
 
-        public const string GetPending = "SELECT * FROM Orders WHERE Status = 'Pending'";
+        public const string GetPending = "SELECT O.Id, O.UserId, U.UserName, O.Address, O.TotalAmount, O.PaymentStatus, O.Status FROM Orders as O Left Join Users as U on U.Id = O.UserId WHERE O.Status = 'Pending' or O.Status = 'Preparing' or O.PaymentStatus = 'Pending'";
 
-        public const string GetById = @"SELECT Id, UserId, Address, TotalAmount, PaymentStatus, Status 
-                                       FROM Orders WHERE Id=@Id";
+        public const string GetById = @"SELECT O.Id, O.UserId, U.UserName, O.Address, O.TotalAmount, O.PaymentStatus, O.Status 
+                                       FROM Orders as O Left Join Users as U on U.Id = O.UserId WHERE O.Id=@Id";
 
         // 🔥 NEW
         public const string GetByUser = "SELECT * FROM Orders WHERE UserId=@UserId";
