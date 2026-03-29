@@ -20,6 +20,14 @@ namespace SafnamBackend.Infrastructure.Repository
             return await con.QueryAsync<Menu>(MenuQueries.GetAll);
         }
 
+        public async Task<Menu?> GetByIdAsync(int id)
+        {
+            using var con = _context.CreateConnection();
+            return await con.QueryFirstOrDefaultAsync<Menu>(
+                MenuQueries.GetById,
+                new { Id = id });
+        }
+
         public async Task<int> CreateAsync(Menu menu)
         {
             using var con = _context.CreateConnection();
@@ -39,6 +47,17 @@ namespace SafnamBackend.Infrastructure.Repository
         {
             using var con = _context.CreateConnection();
             return await con.ExecuteAsync(MenuQueries.Delete, new { Id = id });
+        }
+
+        public async Task<bool> IsUsedInOrders(int menuId)
+        {
+            using var con = _context.CreateConnection();
+
+            var count = await con.ExecuteScalarAsync<int>(
+                MenuQueries.IsUsedInOrder,
+                new { MenuId = menuId });
+
+            return count > 0;
         }
     }
 }

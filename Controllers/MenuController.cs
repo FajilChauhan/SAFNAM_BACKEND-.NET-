@@ -16,14 +16,25 @@ public class MenuController : ControllerBase
         _mediator = mediator;
     }
 
+    // ✅ GET ALL
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var result = await _mediator.Send(new GetMenuQuery());
+        return Ok(await _mediator.Send(new GetMenuQuery()));
+    }
+
+    // ✅ GET BY ID
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var result = await _mediator.Send(new GetMenuByIdQuery { Id = id });
+
+        if (result == null)
+            return NotFound();
+
         return Ok(result);
     }
 
-    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Create([FromForm] Menu menu, IFormFile image)
     {
@@ -36,10 +47,11 @@ public class MenuController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize]
-    [HttpPut]
-    public async Task<IActionResult> Update([FromForm] Menu menu, IFormFile? image)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromForm] Menu menu, IFormFile? image)
     {
+        menu.Id = id;
+
         var result = await _mediator.Send(new UpdateMenuCommand
         {
             Menu = menu,
@@ -47,5 +59,19 @@ public class MenuController : ControllerBase
         });
 
         return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
+        {
+            var result = await _mediator.Send(new DeleteMenuCommand { Id = id });
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); // ✅ clean error
+        }
     }
 }

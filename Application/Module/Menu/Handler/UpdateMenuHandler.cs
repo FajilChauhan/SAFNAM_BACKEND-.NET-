@@ -19,6 +19,8 @@ namespace SafnamBackend.Application.Module.Menu.Handler
         {
             var menu = request.Menu;
             var image = request.Image;
+            if (menu.Id <= 0)
+                throw new Exception("Invalid Menu Id");
 
             bool hasImage = false;
 

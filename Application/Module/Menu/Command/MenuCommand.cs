@@ -15,4 +15,9 @@ namespace SafnamBackend.Application.Module.Menu.Command
         public MenuModel Menu { get; set; }
         public IFormFile? Image { get; set; }
     }
+
+    public class DeleteMenuCommand : IRequest<string>
+    {
+        public int Id { get; set; }
+    }
 }

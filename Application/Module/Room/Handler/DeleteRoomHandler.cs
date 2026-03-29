@@ -18,7 +18,7 @@ namespace SafnamBackend.Application.Module.Room.Handler
             var count = await _repo.GetBookingCountAsync(request.Id);
 
             if (count > 0)
-                return $"Cannot delete. {count} bookings exist for this room.";
+                throw new Exception("❌ Cannot delete bookings exist for this room.");
 
             await _repo.DeleteAsync(request.Id);
 

@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SafnamBackend.Application.DTO;
+using SafnamBackend.Application.Module.Menu.Command;
 using SafnamBackend.Application.Module.Room.Command;
 
 [Route("api/room")]
@@ -46,7 +47,15 @@ public class RoomController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        return Ok(await _mediator.Send(new DeleteRoomCommand { Id = id }));
+        try
+        {
+            var result = await _mediator.Send(new DeleteRoomCommand { Id = id });
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); // ✅ clean error
+        }
     }
 
     // 🔥 NEW (reference check API)

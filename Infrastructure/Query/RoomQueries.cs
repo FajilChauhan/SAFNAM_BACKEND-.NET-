@@ -18,6 +18,6 @@
         public const string Delete = "DELETE FROM Rooms WHERE Id=@Id";
 
         // 🔥 check booking reference
-        public const string GetBookingCount = "SELECT COUNT(*) FROM RoomBookings WHERE RoomId=@Id And Status != 'Completed'";
+        public const string GetBookingCount = "SELECT COUNT(*) FROM RoomBookings WHERE RoomId=@Id";
     }
 }

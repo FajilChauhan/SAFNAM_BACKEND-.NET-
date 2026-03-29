@@ -5,6 +5,8 @@ public static class MenuQueries
 {
     public const string GetAll = "SELECT * FROM Menu";
 
+    public const string GetById = "SELECT * FROM Menu WHERE Id=@Id";
+
     public const string Insert = @"INSERT INTO Menu(ItemName,ImagePath,Price,Type,IsAvailable)
                                   VALUES(@ItemName,@ImagePath,@Price,@Type,@IsAvailable)";
 
@@ -17,4 +19,6 @@ public static class MenuQueries
         WHERE Id=@Id";
 
     public const string Delete = "DELETE FROM Menu WHERE Id=@Id";
+
+    public const string IsUsedInOrder = "SELECT COUNT(*) FROM OrderItems WHERE MenuId=@MenuId";
 }
