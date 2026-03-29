@@ -2,11 +2,17 @@
 {
     public static class TableBookingQueries
     {
-        public const string GetAll = "SELECT * FROM TableBookings";
+        public const string GetAll = "SELECT T.Id, T.TableId, RT.TableNo, RT.Floor, T.UserId," +
+            "U.UserName, T.BookingDate, T.TimeSlot, T.Status FROM TableBookings T LEFT JOIN RestaurantTables RT On RT.Id = T.TableId LEFT JOIN " +
+            "Users U On U.Id = T.UserId";
 
-        public const string GetActive = "SELECT * FROM TableBookings WHERE Status='Active'";
+        public const string GetActive = "SELECT T.Id, T.TableId, RT.TableNo, RT.Floor, T.UserId," +
+            "U.UserName, T.BookingDate, T.TimeSlot, T.Status FROM TableBookings as T Left Join RestaurantTables as RT On RT.Id = T.TableId Left Join " +
+            "Users as U On U.Id = T.UserId Where T.Status = 'Active'";
 
-        public const string GetByUser = "SELECT * FROM TableBookings WHERE UserId=@UserId";
+        public const string GetByUser = "SELECT T.Id, T.TableId, RT.TableNo, RT.Floor, T.UserId," +
+            "U.UserName, T.BookingDate, T.TimeSlot, T.Status FROM TableBookings as T Left Join RestaurantTables as RT On RT.Id = T.TableId Left Join " +
+            "Users as U On U.Id = T.UserId Where T.UserId = @UserId";
 
         public const string GetByTable = "SELECT * FROM TableBookings WHERE TableId=@TableId";
 
